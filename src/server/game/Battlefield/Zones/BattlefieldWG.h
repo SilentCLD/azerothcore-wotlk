@@ -1135,35 +1135,53 @@ struct BfWGGameObjectBuilding
     GuidUnorderedSet m_TowerCannonBottomList;
     GuidUnorderedSet m_TurretTopList;
 
-    void Rebuild()
+    void UpdateTeam(bool updateCreaturesAndGo = true)
     {
         switch (m_Type)
         {
-            case BATTLEFIELD_WG_OBJECTTYPE_KEEP_TOWER:
-            case BATTLEFIELD_WG_OBJECTTYPE_DOOR_LAST:
-            case BATTLEFIELD_WG_OBJECTTYPE_DOOR:
-            case BATTLEFIELD_WG_OBJECTTYPE_WALL:
-                m_Team = m_WG->GetDefenderTeam();           // Objects that are part of the keep should be the defender's
-                break;
-            case BATTLEFIELD_WG_OBJECTTYPE_TOWER:
-                m_Team = m_WG->GetAttackerTeam();           // The towers in the south should be the attacker's
-                break;
-            default:
-                m_Team = TEAM_NEUTRAL;
-                break;
+        case BATTLEFIELD_WG_OBJECTTYPE_KEEP_TOWER:
+        case BATTLEFIELD_WG_OBJECTTYPE_DOOR_LAST:
+        case BATTLEFIELD_WG_OBJECTTYPE_DOOR:
+        case BATTLEFIELD_WG_OBJECTTYPE_WALL:
+            m_Team = m_WG->GetDefenderTeam();           // Objects that are part of the keep should be the defender's
+            break;
+        case BATTLEFIELD_WG_OBJECTTYPE_TOWER:
+            m_Team = m_WG->GetAttackerTeam();           // The towers in the south should be the attacker's
+            break;
+        default:
+            m_Team = TEAM_NEUTRAL;
+            break;
         }
+
+        if (GameObject* go = m_WG->GetGameObject(m_Build))
+        {
+            go->SetUInt32Value(GAMEOBJECT_FACTION, WintergraspFaction[m_Team]);
+        }
+
+        // Update WorldState
+        // First convert to a neutral state, then to Alliance, then the correct team
+        // Probably a better way to do this..
+        uint32 const neutralState = m_State % 3;
+        m_State = (neutralState > 0 ? neutralState : 3) + 6 - (m_Team * 3);
+        m_WG->SendUpdateWorldState(m_WorldState, m_State);
+
+        if (updateCreaturesAndGo)
+        {
+            UpdateCreatureAndGo();
+        }
+    }
+
+    void Rebuild()
+    {
+        UpdateTeam(false);
 
         GameObject* go = m_WG->GetGameObject(m_Build);
         if (go)
         {
             // Rebuild gameobject
             go->SetDestructibleState(GO_DESTRUCTIBLE_REBUILDING, nullptr, true);
-            go->SetUInt32Value(GAMEOBJECT_FACTION, WintergraspFaction[m_Team]);
         }
 
-        // Update worldstate
-        m_State = BATTLEFIELD_WG_OBJECTSTATE_ALLIANCE_INTACT - (m_Team * 3);
-        m_WG->SendUpdateWorldState(m_WorldState, m_State);
         UpdateCreatureAndGo();
     }
 
@@ -1244,21 +1262,7 @@ struct BfWGGameObjectBuilding
         m_damagedText = damageText;
         m_destroyedText = destroyText;
 
-        switch (m_Type)
-        {
-            case BATTLEFIELD_WG_OBJECTTYPE_KEEP_TOWER:
-            case BATTLEFIELD_WG_OBJECTTYPE_DOOR_LAST:
-            case BATTLEFIELD_WG_OBJECTTYPE_DOOR:
-            case BATTLEFIELD_WG_OBJECTTYPE_WALL:
-                m_Team = m_WG->GetDefenderTeam();           // Objects that are part of the keep should be the defender's
-                break;
-            case BATTLEFIELD_WG_OBJECTTYPE_TOWER:
-                m_Team = m_WG->GetAttackerTeam();           // The towers in the south should be the attacker's
-                break;
-            default:
-                m_Team = TEAM_NEUTRAL;
-                break;
-        }
+        UpdateTeam(false);
 
         m_State = sWorld->getWorldState(m_WorldState);
         if (gobj)

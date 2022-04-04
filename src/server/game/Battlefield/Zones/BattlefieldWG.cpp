@@ -388,11 +388,11 @@ void BattlefieldWG::OnBattleEnd(bool endByTimer)
         (*itr)->SetUInt32Value(GAMEOBJECT_FACTION, WintergraspFaction[GetDefenderTeam()]);
 
     // Saving data
-    for (GameObjectBuilding::const_iterator itr = BuildingsInZone.begin(); itr != BuildingsInZone.end(); ++itr)
+    for (auto& building : BuildingsInZone)
     {
-        (*itr)->Rebuild();
-        (*itr)->Save();
-        (*itr)->UpdateTurretAttack(true);
+        building->UpdateTeam();
+        building->UpdateTurretAttack(true);
+        building->Save();
     }
 
     for (Workshop::const_iterator itr = WorkshopsList.begin(); itr != WorkshopsList.end(); ++itr)
