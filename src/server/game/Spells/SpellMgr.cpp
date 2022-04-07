@@ -1188,11 +1188,13 @@ bool SpellArea::IsFitToRequirements(Player const* player, uint32 newZone, uint32
 
                 // team that controls the workshop in the specified area
                 uint32 team = bf->GetData(newArea);
+                switch(team)
+                {
+                    case TEAM_ALLIANCE: return spellId == 56617;
+                    case TEAM_HORDE: return spellId == 56618;
+                    case TEAM_NEUTRAL: return false;
+                }
 
-                if (team == TEAM_HORDE)
-                    return spellId == 56618;
-                else if (team == TEAM_ALLIANCE)
-                    return spellId == 56617;
                 break;
             }
         // Hellscream's Warsong

@@ -1471,35 +1471,37 @@ struct WGWorkshop
 
     void GiveControlTo(TeamId team, bool init /* for first call in setup*/)
     {
-        switch (team)
+        if (team == TEAM_NEUTRAL)
         {
-            case TEAM_NEUTRAL:
-                {
-                    // Send warning message to all player to inform a faction attack to a workshop
-                    // alliance / horde attacking a workshop
-                    bf->SendWarning(teamControl ? WorkshopsData[workshopId].attackText : (WorkshopsData[workshopId].attackText + 2));
-                    break;
-                }
-            case TEAM_ALLIANCE:
-            case TEAM_HORDE:
-                {
-                    // Updating worldstate
-                    state = team == TEAM_ALLIANCE ? BATTLEFIELD_WG_OBJECTSTATE_ALLIANCE_INTACT : BATTLEFIELD_WG_OBJECTSTATE_HORDE_INTACT;
-                    bf->SendUpdateWorldState(WorkshopsData[workshopId].worldstate, state);
+            state = BATTLEFIELD_WG_OBJECTSTATE_NEUTRAL_INTACT;
 
-                    // Warning message
-                    if (!init)                              // workshop taken - alliance
-                        bf->SendWarning(team == TEAM_ALLIANCE ? WorkshopsData[workshopId].takenText : (WorkshopsData[workshopId].takenText + 2));
-
-                    // Found associate graveyard and update it
-                    if (workshopId < BATTLEFIELD_WG_WORKSHOP_KEEP_WEST)
-                        if (bf->GetGraveyardById(workshopId))
-                            bf->GetGraveyardById(workshopId)->GiveControlTo(team);
-
-                    teamControl = team;
-                    break;
-                }
+            // Send warning message to all player to inform a faction attack to a workshop
+            // alliance / horde attacking a workshop
+            bf->SendWarning(teamControl ? WorkshopsData[workshopId].attackText : (WorkshopsData[workshopId].attackText + 2));
         }
+        else
+        {
+            state = team == TEAM_ALLIANCE ? BATTLEFIELD_WG_OBJECTSTATE_ALLIANCE_INTACT : BATTLEFIELD_WG_OBJECTSTATE_HORDE_INTACT;
+
+            // Warning message
+            if (!init) // workshop taken - alliance
+            {
+                bf->SendWarning(team == TEAM_ALLIANCE ? WorkshopsData[workshopId].takenText : (WorkshopsData[workshopId].takenText + 2));
+            }
+        }
+
+        bf->SendUpdateWorldState(WorkshopsData[workshopId].worldstate, state);
+
+        // Find associate graveyard and update it
+        if (workshopId < BATTLEFIELD_WG_WORKSHOP_KEEP_WEST)
+        {
+            if (BfGraveyard* graveyard = bf->GetGraveyardById(workshopId))
+            {
+                graveyard->GiveControlTo(team);
+            }
+        }
+
+        teamControl = team;
 
         if (!init)
         {
