@@ -398,7 +398,7 @@ void BattlefieldWG::OnBattleEnd(bool endByTimer)
     for (Workshop::const_iterator itr = WorkshopsList.begin(); itr != WorkshopsList.end(); ++itr)
         (*itr)->Save();
 
-    for (uint8 team = 0; team < 2; ++team)
+    for (uint8 team = 0; team < PVP_TEAMS_COUNT; ++team)
     {
         for (GuidUnorderedSet::const_iterator itr = m_vehicles[team].begin(); itr != m_vehicles[team].end(); ++itr)
             if (Creature* creature = GetCreature(*itr))
