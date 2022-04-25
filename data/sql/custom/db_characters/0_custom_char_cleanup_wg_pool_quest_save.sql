@@ -1,0 +1,1 @@
+DELETE FROM `pool_quest_save` WHERE (`pool_id` IN (385, 384));

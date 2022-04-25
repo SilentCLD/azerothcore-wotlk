@@ -446,53 +446,8 @@ public:
                 Quest const* quest = sObjectMgr->GetQuestTemplate(questId);
                 if (!quest)
                     continue;
-
-                switch (questId)
-                {
-                    case QUEST_BONES_AND_ARROWS_ALLIANCE_ATT:
-                        if (!sPoolMgr->IsSpawnedObject<Quest>(QUEST_BONES_AND_ARROWS_ALLIANCE_DEF))
-                            continue;
-                        questRelationVector.push_back(QUEST_BONES_AND_ARROWS_ALLIANCE_ATT);
-                        break;
-                    case QUEST_WARDING_THE_WARRIORS_ALLIANCE_ATT:
-                        if (!sPoolMgr->IsSpawnedObject<Quest>(QUEST_WARDING_THE_WARRIORS_ALLIANCE_DEF))
-                            continue;
-                        questRelationVector.push_back(QUEST_WARDING_THE_WARRIORS_ALLIANCE_ATT);
-                        break;
-                    case QUEST_A_RARE_HERB_ALLIANCE_ATT:
-                        if (!sPoolMgr->IsSpawnedObject<Quest>(QUEST_A_RARE_HERB_ALLIANCE_DEF))
-                            continue;
-                        questRelationVector.push_back(QUEST_A_RARE_HERB_ALLIANCE_ATT);
-                        break;
-                    case QUEST_FUELING_THE_DEMOLISHERS_ALLIANCE_ATT:
-                        if (!sPoolMgr->IsSpawnedObject<Quest>(QUEST_FUELING_THE_DEMOLISHERS_ALLIANCE_DEF))
-                            continue;
-                        questRelationVector.push_back(QUEST_FUELING_THE_DEMOLISHERS_ALLIANCE_ATT);
-                        break;
-                    case QUEST_BONES_AND_ARROWS_HORDE_ATT:
-                        if (!sPoolMgr->IsSpawnedObject<Quest>(QUEST_BONES_AND_ARROWS_HORDE_DEF))
-                            continue;
-                        questRelationVector.push_back(QUEST_BONES_AND_ARROWS_HORDE_ATT);
-                        break;
-                    case QUEST_JINXING_THE_WALLS_HORDE_ATT:
-                        if (!sPoolMgr->IsSpawnedObject<Quest>(QUEST_WARDING_THE_WALLS_HORDE_DEF))
-                            continue;
-                        questRelationVector.push_back(QUEST_JINXING_THE_WALLS_HORDE_ATT);
-                        break;
-                    case QUEST_FUELING_THE_DEMOLISHERS_HORDE_ATT:
-                        if (!sPoolMgr->IsSpawnedObject<Quest>(QUEST_FUELING_THE_DEMOLISHERS_HORDE_DEF))
-                            continue;
-                        questRelationVector.push_back(QUEST_FUELING_THE_DEMOLISHERS_HORDE_ATT);
-                        break;
-                    case QUEST_HEALING_WITH_ROSES_HORDE_ATT:
-                        if (!sPoolMgr->IsSpawnedObject<Quest>(QUEST_HEALING_WITH_ROSES_HORDE_DEF))
-                            continue;
-                        questRelationVector.push_back(QUEST_HEALING_WITH_ROSES_HORDE_ATT);
-                        break;
-                    default:
-                        questRelationVector.push_back(questId);
-                        break;
-                }
+                
+                questRelationVector.push_back(questId);
             }
 
             for (std::vector<uint32>::const_iterator i = questRelationVector.begin(); i != questRelationVector.end(); ++i)
@@ -633,42 +588,6 @@ public:
             ConditionList conditions = sConditionMgr->GetConditionsForNotGroupedEntry(CONDITION_SOURCE_TYPE_QUEST_AVAILABLE, quest->GetQuestId());
             if (!sConditionMgr->IsObjectMeetToConditions(player, conditions))
                 continue;
-
-            switch (questId)
-            {
-                case QUEST_BONES_AND_ARROWS_ALLIANCE_ATT:
-                    if (!sPoolMgr->IsSpawnedObject<Quest>(QUEST_BONES_AND_ARROWS_ALLIANCE_DEF))
-                        continue;
-                    break;
-                case QUEST_WARDING_THE_WARRIORS_ALLIANCE_ATT:
-                    if (!sPoolMgr->IsSpawnedObject<Quest>(QUEST_WARDING_THE_WARRIORS_ALLIANCE_DEF))
-                        continue;
-                    break;
-                case QUEST_A_RARE_HERB_ALLIANCE_ATT:
-                    if (!sPoolMgr->IsSpawnedObject<Quest>(QUEST_A_RARE_HERB_ALLIANCE_DEF))
-                        continue;
-                    break;
-                case QUEST_FUELING_THE_DEMOLISHERS_ALLIANCE_ATT:
-                    if (!sPoolMgr->IsSpawnedObject<Quest>(QUEST_FUELING_THE_DEMOLISHERS_ALLIANCE_DEF))
-                        continue;
-                    break;
-                case QUEST_BONES_AND_ARROWS_HORDE_ATT:
-                    if (!sPoolMgr->IsSpawnedObject<Quest>(QUEST_BONES_AND_ARROWS_HORDE_DEF))
-                        continue;
-                    break;
-                case QUEST_JINXING_THE_WALLS_HORDE_ATT:
-                    if (!sPoolMgr->IsSpawnedObject<Quest>(QUEST_WARDING_THE_WALLS_HORDE_DEF))
-                        continue;
-                    break;
-                case QUEST_FUELING_THE_DEMOLISHERS_HORDE_ATT:
-                    if (!sPoolMgr->IsSpawnedObject<Quest>(QUEST_FUELING_THE_DEMOLISHERS_HORDE_DEF))
-                        continue;
-                    break;
-                case QUEST_HEALING_WITH_ROSES_HORDE_ATT:
-                    if (!sPoolMgr->IsSpawnedObject<Quest>(QUEST_HEALING_WITH_ROSES_HORDE_DEF))
-                        continue;
-                    break;
-            }
 
             if (wintergrasp)
             {
