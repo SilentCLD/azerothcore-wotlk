@@ -1135,22 +1135,22 @@ struct BfWGGameObjectBuilding
     GuidUnorderedSet m_TowerCannonBottomList;
     GuidUnorderedSet m_TurretTopList;
 
-    void UpdateTeam(bool updateCreaturesAndGo = true)
+    void UpdateTeam(bool updateCreaturesAndGo = true, bool init = false)
     {
         switch (m_Type)
         {
-        case BATTLEFIELD_WG_OBJECTTYPE_KEEP_TOWER:
-        case BATTLEFIELD_WG_OBJECTTYPE_DOOR_LAST:
-        case BATTLEFIELD_WG_OBJECTTYPE_DOOR:
-        case BATTLEFIELD_WG_OBJECTTYPE_WALL:
-            m_Team = m_WG->GetDefenderTeam();           // Objects that are part of the keep should be the defender's
-            break;
-        case BATTLEFIELD_WG_OBJECTTYPE_TOWER:
-            m_Team = m_WG->GetAttackerTeam();           // The towers in the south should be the attacker's
-            break;
-        default:
-            m_Team = TEAM_NEUTRAL;
-            break;
+            case BATTLEFIELD_WG_OBJECTTYPE_KEEP_TOWER:
+            case BATTLEFIELD_WG_OBJECTTYPE_DOOR_LAST:
+            case BATTLEFIELD_WG_OBJECTTYPE_DOOR:
+            case BATTLEFIELD_WG_OBJECTTYPE_WALL:
+                m_Team = m_WG->GetDefenderTeam();           // Objects that are part of the keep should be the defender's
+                break;
+            case BATTLEFIELD_WG_OBJECTTYPE_TOWER:
+                m_Team = m_WG->GetAttackerTeam();           // The towers in the south should be the attacker's
+                break;
+            default:
+                m_Team = TEAM_NEUTRAL;
+                break;
         }
 
         if (GameObject* go = m_WG->GetGameObject(m_Build))
@@ -1159,10 +1159,18 @@ struct BfWGGameObjectBuilding
         }
 
         // Update WorldState
-        // First convert to a neutral state, then to Alliance, then the correct team
-        // Probably a better way to do this..
-        uint32 const neutralState = m_State % 3;
-        m_State = (neutralState > 0 ? neutralState : 3) + 6 - (m_Team * 3);
+        if (init)
+        {
+            m_State = BATTLEFIELD_WG_OBJECTSTATE_ALLIANCE_INTACT - (m_Team * 3);
+        }
+        else
+        {
+            // First convert to a neutral state, then to Alliance, then the correct team
+            // Probably a better way to do this..
+            uint32 const neutralState = m_State % 3;
+            m_State = (neutralState > 0 ? neutralState : 3) + 6 - (m_Team * 3);
+        }
+
         m_WG->SendUpdateWorldState(m_WorldState, m_State);
 
         if (updateCreaturesAndGo)
@@ -1173,7 +1181,7 @@ struct BfWGGameObjectBuilding
 
     void Rebuild()
     {
-        UpdateTeam(false);
+        UpdateTeam(false, true);
 
         GameObject* go = m_WG->GetGameObject(m_Build);
         if (go)
@@ -1493,12 +1501,9 @@ struct WGWorkshop
         bf->SendUpdateWorldState(WorkshopsData[workshopId].worldstate, state);
 
         // Find associate graveyard and update it
-        if (workshopId < BATTLEFIELD_WG_WORKSHOP_KEEP_WEST)
+        if (BfGraveyard* graveyard = bf->GetGraveyardById(workshopId))
         {
-            if (BfGraveyard* graveyard = bf->GetGraveyardById(workshopId))
-            {
-                graveyard->GiveControlTo(team);
-            }
+            graveyard->GiveControlTo(team);
         }
 
         teamControl = team;
@@ -1512,10 +1517,20 @@ struct WGWorkshop
 
     void UpdateGraveyardAndWorkshop()
     {
-        if (workshopId < BATTLEFIELD_WG_WORKSHOP_KEEP_WEST)
-            bf->GetGraveyardById(workshopId)->GiveControlTo(TeamId(teamControl));
-        else
-            GiveControlTo(bf->GetDefenderTeam(), true);
+        switch (workshopId)
+        {
+            case BATTLEFIELD_WG_WORKSHOP_NE:
+            case BATTLEFIELD_WG_WORKSHOP_NW:
+            case BATTLEFIELD_WG_WORKSHOP_KEEP_EAST:
+            case BATTLEFIELD_WG_WORKSHOP_KEEP_WEST:
+                GiveControlTo(bf->GetDefenderTeam(), true);
+                break;
+
+            case BATTLEFIELD_WG_WORKSHOP_SE:
+            case BATTLEFIELD_WG_WORKSHOP_SW:
+                GiveControlTo(bf->GetAttackerTeam(), true);
+                break;
+        }
     }
 
     void Save()
