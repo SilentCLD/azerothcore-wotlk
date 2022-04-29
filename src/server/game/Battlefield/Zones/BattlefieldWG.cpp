@@ -875,7 +875,9 @@ void BattlefieldWG::OnPlayerLeaveWar(Player* player)
 void BattlefieldWG::OnPlayerLeaveZone(Player* player)
 {
     if (!m_isActive)
+    {
         RemoveAurasFromPlayer(player);
+    }
 
     player->RemoveAurasDueToSpell(SPELL_HORDE_CONTROLS_FACTORY_PHASE_SHIFT);
     player->RemoveAurasDueToSpell(SPELL_ALLIANCE_CONTROLS_FACTORY_PHASE_SHIFT);
@@ -886,16 +888,28 @@ void BattlefieldWG::OnPlayerLeaveZone(Player* player)
 void BattlefieldWG::OnPlayerEnterZone(Player* player)
 {
     if (!m_isActive)
+    {
         RemoveAurasFromPlayer(player);
+    }
+
+    player->RemoveAurasDueToSpell(SPELL_HORDE_CONTROLS_FACTORY_PHASE_SHIFT);
+    player->RemoveAurasDueToSpell(SPELL_ALLIANCE_CONTROLS_FACTORY_PHASE_SHIFT);
+    player->RemoveAurasDueToSpell(SPELL_HORDE_CONTROL_PHASE_SHIFT);
+    player->RemoveAurasDueToSpell(SPELL_ALLIANCE_CONTROL_PHASE_SHIFT);
 
     player->AddAura(m_DefenderTeam == TEAM_HORDE ? SPELL_HORDE_CONTROL_PHASE_SHIFT : SPELL_ALLIANCE_CONTROL_PHASE_SHIFT, player);
+
     // Send worldstate to player
     SendInitWorldStatesTo(player);
 
     // xinef: Attacker, if hidden in relic room kick him out
     if (player->GetTeamId() == GetAttackerTeam())
+    {
         if (player->GetPositionX() > 5400.0f && player->GetPositionX() < 5490.0f && player->GetPositionY() > 2803.0f && player->GetPositionY() < 2878.0f)
+        {
             KickPlayerFromBattlefield(player->GetGUID());
+        }
+    }
 }
 
 uint32 BattlefieldWG::GetData(uint32 data) const
