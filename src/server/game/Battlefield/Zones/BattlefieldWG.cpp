@@ -96,6 +96,7 @@ bool BattlefieldWG::SetupBattlefield()
         m_Timer = m_RestartAfterCrash;
     }
 
+    // Spawn Graveyards
     for (uint8 i = 0; i < BATTLEFIELD_WG_GRAVEYARD_MAX; i++)
     {
         BfGraveyardWG* graveyard = new BfGraveyardWG(this);
@@ -110,11 +111,28 @@ bool BattlefieldWG::SetupBattlefield()
         m_GraveyardList[i] = graveyard;
     }
 
-    // Spawn workshop creatures and gameobjects
+    // Spawn Workshops
     for (uint8 i = 0; i < WG_MAX_WORKSHOP; i++)
     {
         WGWorkshop* workshop = new WGWorkshop(this, i);
-        workshop->UpdateGraveyardAndWorkshop();
+
+        switch (i)
+        {
+            case BATTLEFIELD_WG_WORKSHOP_NE:
+            case BATTLEFIELD_WG_WORKSHOP_NW:
+            case BATTLEFIELD_WG_WORKSHOP_KEEP_EAST:
+            case BATTLEFIELD_WG_WORKSHOP_KEEP_WEST:
+                workshop->GiveControlTo(GetDefenderTeam(), true);
+                break;
+
+            case BATTLEFIELD_WG_WORKSHOP_SE:
+            case BATTLEFIELD_WG_WORKSHOP_SW:
+                workshop->GiveControlTo(GetAttackerTeam(), true);
+                break;
+        }
+
+        // GiveControlTo(...) overrides graveyard, reset it back to Defender when between games
+        GetGraveyardById(i)->GiveControlTo(GetDefenderTeam());
 
         // Note: Capture point is added once the gameobject is created.
         WorkshopsList.insert(workshop);
