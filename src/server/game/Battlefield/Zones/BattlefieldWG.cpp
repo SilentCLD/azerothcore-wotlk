@@ -220,7 +220,7 @@ bool BattlefieldWG::Update(uint32 diff)
             sWorld->setWorldState(BATTLEFIELD_WG_WORLD_STATE_DEFENDER, m_DefenderTeam);
             sWorld->setWorldState(ClockWorldState[0], m_Timer);
 
-            Events.ScheduleEvent(EVENT_SAVE, 60 * IN_MILLISECONDS);
+            Events.RepeatEvent(60 * IN_MILLISECONDS);
             break;
 
         case EVENT_UPDATE_TENACITY:
@@ -232,7 +232,20 @@ bool BattlefieldWG::Update(uint32 diff)
                 }
 
                 m_updateTenacityList.clear();
-                Events.ScheduleEvent(EVENT_UPDATE_TENACITY, 10 * IN_MILLISECONDS);
+                Events.RepeatEvent(10 * IN_MILLISECONDS);
+            }
+            break;
+
+        case EVENT_REBUILD_BUILDINGS:
+            if (!IsWarTime()) // Rebuild X time after the battle has ended (also handled in OnBattleStart)
+            {
+                for (auto& building : BuildingsInZone)
+                {
+                    if (building)
+                    {
+                        building->Rebuild();
+                    }
+                }
             }
             break;
     }
@@ -443,6 +456,9 @@ void BattlefieldWG::OnBattleEnd(bool endByTimer)
             graveyard->GiveControlTo(GetDefenderTeam());
         }
     }
+
+    // Schedule the rebuild of buildings
+    Events.ScheduleEvent(EVENT_REBUILD_BUILDINGS, 5 * MINUTE * IN_MILLISECONDS);
 
     for (uint8 team = 0; team < PVP_TEAMS_COUNT; ++team)
     {

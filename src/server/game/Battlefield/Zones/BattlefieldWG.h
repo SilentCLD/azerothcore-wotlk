@@ -460,8 +460,9 @@ public:
 protected:
     enum Events
     {
-        EVENT_SAVE,
-        EVENT_UPDATE_TENACITY
+        EVENT_SAVE = 1,
+        EVENT_UPDATE_TENACITY,
+        EVENT_REBUILD_BUILDINGS
     };
 
     EventMap Events;
@@ -660,7 +661,7 @@ const WintergraspBuildingSpawnData WGGameObjectBuilding[WG_MAX_OBJ] =
     { 190357, 3705, 4398.17f, 2822.5f, 405.627f, -3.12412f, BATTLEFIELD_WG_OBJECTTYPE_TOWER, BATTLEFIELD_WG_TEXT_TOWER_S_DAMAGED, BATTLEFIELD_WG_TEXT_TOWER_S_DESTROYED },
     { 190358, 3706, 4459.1f, 1944.33f, 434.991f, -2.00276f, BATTLEFIELD_WG_OBJECTTYPE_TOWER, BATTLEFIELD_WG_TEXT_TOWER_E_DAMAGED, BATTLEFIELD_WG_TEXT_TOWER_E_DESTROYED },
 
-    // Door of forteress (Not spawned in db)
+    // Door of fortress (Not spawned in db)
     { 190375, 3763, 5162.99f, 2841.23f, 410.162f, -3.13286f, BATTLEFIELD_WG_OBJECTTYPE_DOOR, 0, 0 },
 
     // Last door (Not spawned in db)
