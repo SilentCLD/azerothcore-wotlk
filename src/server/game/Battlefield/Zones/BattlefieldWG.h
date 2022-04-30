@@ -1501,9 +1501,12 @@ struct WGWorkshop
         bf->SendUpdateWorldState(WorkshopsData[workshopId].worldstate, state);
 
         // Find associate graveyard and update it
-        if (BfGraveyard* graveyard = bf->GetGraveyardById(workshopId))
+        if (workshopId < BATTLEFIELD_WG_WORKSHOP_KEEP_WEST)
         {
-            graveyard->GiveControlTo(team);
+            if (BfGraveyard* graveyard = bf->GetGraveyardById(workshopId))
+            {
+                graveyard->GiveControlTo(team);
+            }
         }
 
         teamControl = team;

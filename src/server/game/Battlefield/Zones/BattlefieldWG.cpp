@@ -131,11 +131,17 @@ bool BattlefieldWG::SetupBattlefield()
                 break;
         }
 
-        // GiveControlTo(...) overrides graveyard, reset it back to Defender when between games
-        GetGraveyardById(i)->GiveControlTo(GetDefenderTeam());
-
         // Note: Capture point is added once the gameobject is created.
         WorkshopsList.insert(workshop);
+    }
+
+    // Reset all workshop graveyards to Defender
+    for (uint8 i = 0; i < BATTLEFIELD_WG_GY_KEEP; i++)
+    {
+        if (BfGraveyard* graveyard = GetGraveyardById(i))
+        {
+            graveyard->GiveControlTo(GetDefenderTeam());
+        }
     }
 
     // Spawn NPCs in the defender's keep, both Horde and Alliance
@@ -387,11 +393,6 @@ void BattlefieldWG::OnBattleEnd(bool endByTimer)
         if (Creature* creature = GetCreature(*itr))
             ShowNpc(creature, true);
 
-    // Update all graveyard, control is to defender when no wartime
-    for (uint8 i = 0; i < BATTLEFIELD_WG_GY_HORDE; i++)
-        if (BfGraveyard* graveyard = GetGraveyardById(i))
-            graveyard->GiveControlTo(GetDefenderTeam());
-
     for (GameObjectSet::const_iterator itr = m_KeepGameObject[GetDefenderTeam()].begin(); itr != m_KeepGameObject[GetDefenderTeam()].end(); ++itr)
         (*itr)->SetRespawnTime(RESPAWN_IMMEDIATELY);
 
@@ -410,8 +411,21 @@ void BattlefieldWG::OnBattleEnd(bool endByTimer)
         building->Save();
     }
 
-    for (Workshop::const_iterator itr = WorkshopsList.begin(); itr != WorkshopsList.end(); ++itr)
-        (*itr)->Save();
+    // Update Workshops
+    for (auto& workshop : WorkshopsList)
+    {
+        workshop->UpdateGraveyardAndWorkshop();
+        workshop->Save();
+    }
+
+    // Update all graveyard, control is to defender when no wartime
+    for (uint8 i = 0; i < BATTLEFIELD_WG_GY_KEEP; i++)
+    {
+        if (BfGraveyard* graveyard = GetGraveyardById(i))
+        {
+            graveyard->GiveControlTo(GetDefenderTeam());
+        }
+    }
 
     for (uint8 team = 0; team < PVP_TEAMS_COUNT; ++team)
     {
