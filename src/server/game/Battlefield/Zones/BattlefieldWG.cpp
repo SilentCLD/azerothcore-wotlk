@@ -418,6 +418,12 @@ void BattlefieldWG::OnBattleEnd(bool endByTimer)
         workshop->Save();
     }
 
+    // Update CapturePoints
+    for (auto& capturePoint : m_capturePoints)
+    {
+        dynamic_cast<WintergraspCapturePoint*>(capturePoint)->Reset();
+    }
+
     // Update all graveyard, control is to defender when no wartime
     for (uint8 i = 0; i < BATTLEFIELD_WG_GY_KEEP; i++)
     {
@@ -1236,6 +1242,25 @@ WintergraspCapturePoint::WintergraspCapturePoint(BattlefieldWG* battlefield, Tea
     m_Bf = battlefield;
     m_team = teamInControl;
     m_Workshop = nullptr;
+}
+
+void WintergraspCapturePoint::Reset()
+{
+    ASSERT(m_Workshop);
+
+    m_team = m_Workshop->teamControl;
+    if (m_team == TEAM_ALLIANCE)
+    {
+        m_value = m_maxValue;
+        m_State = BF_CAPTUREPOINT_OBJECTIVESTATE_ALLIANCE;
+    }
+    else
+    {
+        m_value = -m_maxValue;
+        m_State = BF_CAPTUREPOINT_OBJECTIVESTATE_HORDE;
+    }
+
+    m_OldState = BF_CAPTUREPOINT_OBJECTIVESTATE_NEUTRAL;
 }
 
 void WintergraspCapturePoint::ChangeTeam(TeamId /*oldTeam*/)

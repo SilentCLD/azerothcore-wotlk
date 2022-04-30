@@ -261,6 +261,7 @@ public:
     WintergraspCapturePoint(BattlefieldWG* battlefield, TeamId teamInControl);
 
     void LinkToWorkshop(WGWorkshop* workshop) { m_Workshop = workshop; }
+    void Reset();
 
     void ChangeTeam(TeamId oldteam) override;
     TeamId GetTeam() const { return m_team; }
