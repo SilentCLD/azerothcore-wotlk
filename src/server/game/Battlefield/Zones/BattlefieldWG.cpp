@@ -71,7 +71,7 @@ bool BattlefieldWG::SetupBattlefield()
 
     m_Data32.resize(BATTLEFIELD_WG_DATA_MAX);
 
-    m_saveTimer = 60000;
+    Events.ScheduleEvent(EVENT_SAVE, 60 * IN_MILLISECONDS);
 
     // Init GraveYards
     SetGraveyardNumber(BATTLEFIELD_WG_GRAVEYARD_MAX);
@@ -210,28 +210,31 @@ bool BattlefieldWG::SetupBattlefield()
 bool BattlefieldWG::Update(uint32 diff)
 {
     bool m_return = Battlefield::Update(diff);
-    if (m_saveTimer <= diff)
-    {
-        sWorld->setWorldState(BATTLEFIELD_WG_WORLD_STATE_ACTIVE, m_isActive);
-        sWorld->setWorldState(BATTLEFIELD_WG_WORLD_STATE_DEFENDER, m_DefenderTeam);
-        sWorld->setWorldState(ClockWorldState[0], m_Timer);
-        m_saveTimer = 60 * IN_MILLISECONDS;
-    }
-    else
-        m_saveTimer -= diff;
 
-    // Update Tenacity
-    if (IsWarTime())
+    Events.Update(diff);
+
+    switch (Events.ExecuteEvent())
     {
-        if (m_tenacityUpdateTimer <= diff)
-        {
-            m_tenacityUpdateTimer = 10000;
-            if (!m_updateTenacityList.empty())
-                UpdateTenacity();
-            m_updateTenacityList.clear();
-        }
-        else
-            m_tenacityUpdateTimer -= diff;
+        case EVENT_SAVE:
+            sWorld->setWorldState(BATTLEFIELD_WG_WORLD_STATE_ACTIVE, m_isActive);
+            sWorld->setWorldState(BATTLEFIELD_WG_WORLD_STATE_DEFENDER, m_DefenderTeam);
+            sWorld->setWorldState(ClockWorldState[0], m_Timer);
+
+            Events.ScheduleEvent(EVENT_SAVE, 60 * IN_MILLISECONDS);
+            break;
+
+        case EVENT_UPDATE_TENACITY:
+            if (IsWarTime())
+            {
+                if (!m_updateTenacityList.empty())
+                {
+                    UpdateTenacity();
+                }
+
+                m_updateTenacityList.clear();
+                Events.ScheduleEvent(EVENT_UPDATE_TENACITY, 10 * IN_MILLISECONDS);
+            }
+            break;
     }
 
     return m_return;
@@ -303,7 +306,7 @@ void BattlefieldWG::OnBattleStart()
 
     // Xinef: reset tenacity counter
     m_tenacityStack = 0;
-    m_tenacityUpdateTimer = 20000;
+    Events.ScheduleEvent(EVENT_UPDATE_TENACITY, 20 * IN_MILLISECONDS);
 
     if (sWorld->getBoolConfig(CONFIG_BATTLEGROUND_QUEUE_ANNOUNCER_ENABLE))
         sWorld->SendWorldText(BATTLEFIELD_WG_WORLD_START_MESSAGE);

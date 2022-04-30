@@ -19,6 +19,7 @@
 #define BATTLEFIELD_WG_
 
 #include "Battlefield.h"
+#include "EventMap.h"
 #include "Log.h"
 #include "ObjectAccessor.h"
 #include "World.h"
@@ -457,6 +458,14 @@ public:
         return false;
     }
 protected:
+    enum Events
+    {
+        EVENT_SAVE,
+        EVENT_UPDATE_TENACITY
+    };
+
+    EventMap Events;
+
     bool m_isRelicInteractible;
 
     Workshop WorkshopsList;
@@ -472,8 +481,6 @@ protected:
     GuidUnorderedSet m_updateTenacityList;
 
     int32 m_tenacityStack;
-    uint32 m_tenacityUpdateTimer;
-    uint32 m_saveTimer;
 
     ObjectGuid m_titansRelic;
 };
