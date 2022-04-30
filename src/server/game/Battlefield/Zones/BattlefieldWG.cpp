@@ -281,12 +281,17 @@ void BattlefieldWG::OnBattleStart()
     SetData(BATTLEFIELD_WG_DATA_BROKEN_TOWER_ATT, 0);
     SetData(BATTLEFIELD_WG_DATA_DAMAGED_TOWER_ATT, 0);
 
-    // Update graveyard (in no war time all graveyard is to deffender, in war time, depend of base)
-    for (Workshop::const_iterator itr = WorkshopsList.begin(); itr != WorkshopsList.end(); ++itr)
-        if (*itr)
-            (*itr)->UpdateGraveyardAndWorkshop();
+    // Update graveyard (in no war time all graveyard is to defender, in war time, depend of base)
+    for (auto& workshop : WorkshopsList)
+    {
+        if (workshop)
+        {
+            workshop->UpdateGraveyardAndWorkshop();
+        }
+    }
 
     for (uint8 team = 0; team < 2; ++team)
+    {
         for (GuidUnorderedSet::const_iterator itr = m_players[team].begin(); itr != m_players[team].end(); ++itr)
         {
             // Kick player in orb room, TODO: offline player ?
@@ -299,8 +304,11 @@ void BattlefieldWG::OnBattleStart()
                 SendInitWorldStatesTo(player);
             }
         }
+    }
+
     // Initialize vehicle counter
     UpdateCounterVehicle(true);
+
     // Send start warning to all players
     SendWarning(BATTLEFIELD_WG_TEXT_START);
 
