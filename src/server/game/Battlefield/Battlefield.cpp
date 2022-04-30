@@ -330,11 +330,23 @@ void Battlefield::KickPlayerFromBattlefield(ObjectGuid guid)
 void Battlefield::StartBattle()
 {
     if (m_isActive)
+    {
         return;
+    }
 
     for (int team = 0; team < PVP_TEAMS_COUNT; team++)
     {
         m_PlayersInWar[team].clear();
+
+        // Disband all groups before clearing - some odd behaviour is exhibited without this
+        for (auto& groupGuid : m_Groups[team])
+        {
+            if (Group* group = sGroupMgr->GetGroupByGUID(groupGuid.GetCounter()))
+            {
+                group->Disband();
+            }
+        }
+
         m_Groups[team].clear();
     }
 
