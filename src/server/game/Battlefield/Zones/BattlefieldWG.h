@@ -1479,22 +1479,32 @@ struct WGWorkshop
 
     void GiveControlTo(TeamId team, bool init /* for first call in setup*/)
     {
+        // When team switches to neutral only graveyard access is lost
+        // When a faction gains full control both graveyard and vehicle count is updated
+
         if (team == TEAM_NEUTRAL)
         {
             state = BATTLEFIELD_WG_OBJECTSTATE_NEUTRAL_INTACT;
 
-            // Send warning message to all player to inform a faction attack to a workshop
-            // alliance / horde attacking a workshop
-            bf->SendWarning(teamControl ? WorkshopsData[workshopId].attackText : (WorkshopsData[workshopId].attackText + 2));
+            if (!init)
+            {
+                // Warning message - Workshop attacked
+                bf->SendWarning(teamControl ? WorkshopsData[workshopId].attackText : (WorkshopsData[workshopId].attackText + 2));
+            }
         }
         else
         {
-            state = team == TEAM_ALLIANCE ? BATTLEFIELD_WG_OBJECTSTATE_ALLIANCE_INTACT : BATTLEFIELD_WG_OBJECTSTATE_HORDE_INTACT;
+            teamControl = team;
+            state = teamControl == TEAM_ALLIANCE ? BATTLEFIELD_WG_OBJECTSTATE_ALLIANCE_INTACT : BATTLEFIELD_WG_OBJECTSTATE_HORDE_INTACT;
 
-            // Warning message
-            if (!init) // workshop taken - alliance
+            if (!init)
             {
+                // Warning message - Workshop taken
                 bf->SendWarning(team == TEAM_ALLIANCE ? WorkshopsData[workshopId].takenText : (WorkshopsData[workshopId].takenText + 2));
+
+                // Update vehicle count and zone auras
+                bf->UpdateCounterVehicle(false);
+                bf->CapturePointTaken(bf->GetAreaByGraveyardId(workshopId));
             }
         }
 
@@ -1507,14 +1517,6 @@ struct WGWorkshop
             {
                 graveyard->GiveControlTo(team);
             }
-        }
-
-        teamControl = team;
-
-        if (!init)
-        {
-            bf->UpdateCounterVehicle(false);
-            bf->CapturePointTaken(bf->GetAreaByGraveyardId(workshopId));
         }
     }
 
