@@ -1202,6 +1202,14 @@ struct BfWGGameObjectBuilding
         UpdateCreatureAndGo();
     }
 
+    void SetDestructible(bool allow) const
+    {
+        if (GameObject* go = m_WG->GetGameObject(m_Build))
+        {
+            go->SetDestructibleBuildingModifyState(allow);
+        }
+    }
+
     // Called when associated gameobject is damaged
     void Damaged()
     {

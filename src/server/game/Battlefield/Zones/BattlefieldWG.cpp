@@ -192,6 +192,7 @@ bool BattlefieldWG::SetupBattlefield()
         GameObject* go = SpawnGameObject(WGGameObjectBuilding[i].entry, WGGameObjectBuilding[i].x, WGGameObjectBuilding[i].y, WGGameObjectBuilding[i].z, WGGameObjectBuilding[i].o);
         BfWGGameObjectBuilding* b = new BfWGGameObjectBuilding(this);
         b->Init(go, WGGameObjectBuilding[i].type, WGGameObjectBuilding[i].WorldState, WGGameObjectBuilding[i].damageText, WGGameObjectBuilding[i].destroyText);
+        b->SetDestructible(false);
         BuildingsInZone.insert(b);
     }
 
@@ -282,12 +283,13 @@ void BattlefieldWG::OnBattleStart()
 
     // Rebuild all wall
     Events.CancelEvent(EVENT_REBUILD_BUILDINGS);
-    for (GameObjectBuilding::const_iterator itr = BuildingsInZone.begin(); itr != BuildingsInZone.end(); ++itr)
+    for (auto& building : BuildingsInZone)
     {
-        if (*itr)
+        if (building)
         {
-            (*itr)->Rebuild();
-            (*itr)->UpdateTurretAttack(false);
+            building->Rebuild();
+            building->SetDestructible(true);
+            building->UpdateTurretAttack(false);
         }
     }
 
@@ -431,6 +433,7 @@ void BattlefieldWG::OnBattleEnd(bool endByTimer)
     // Saving data
     for (auto& building : BuildingsInZone)
     {
+        building->SetDestructible(false);
         building->UpdateTeam();
         building->UpdateTurretAttack(true);
         building->Save();
