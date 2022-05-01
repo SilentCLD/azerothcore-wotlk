@@ -281,6 +281,7 @@ void BattlefieldWG::OnBattleStart()
     }
 
     // Rebuild all wall
+    Events.CancelEvent(EVENT_REBUILD_BUILDINGS);
     for (GameObjectBuilding::const_iterator itr = BuildingsInZone.begin(); itr != BuildingsInZone.end(); ++itr)
     {
         if (*itr)
