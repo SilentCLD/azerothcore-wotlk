@@ -115,21 +115,7 @@ bool BattlefieldWG::SetupBattlefield()
     for (uint8 i = 0; i < WG_MAX_WORKSHOP; i++)
     {
         WGWorkshop* workshop = new WGWorkshop(this, i);
-
-        switch (i)
-        {
-            case BATTLEFIELD_WG_WORKSHOP_NE:
-            case BATTLEFIELD_WG_WORKSHOP_NW:
-            case BATTLEFIELD_WG_WORKSHOP_KEEP_EAST:
-            case BATTLEFIELD_WG_WORKSHOP_KEEP_WEST:
-                workshop->GiveControlTo(GetDefenderTeam(), true);
-                break;
-
-            case BATTLEFIELD_WG_WORKSHOP_SE:
-            case BATTLEFIELD_WG_WORKSHOP_SW:
-                workshop->GiveControlTo(GetAttackerTeam(), true);
-                break;
-        }
+        workshop->UpdateGraveyardAndWorkshop();
 
         // Note: Capture point is added once the gameobject is created.
         WorkshopsList.insert(workshop);
