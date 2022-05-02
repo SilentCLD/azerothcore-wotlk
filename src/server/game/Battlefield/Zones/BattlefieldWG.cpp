@@ -906,6 +906,8 @@ void BattlefieldWG::OnPlayerJoinWar(Player* player)
     RemoveAurasFromPlayer(player);
 
     player->Dismount();
+    player->RemoveAurasByType(SPELL_AURA_MOUNTED);
+
     player->CastSpell(player, SPELL_RECRUIT, true);
     AddUpdateTenacity(player);
 
