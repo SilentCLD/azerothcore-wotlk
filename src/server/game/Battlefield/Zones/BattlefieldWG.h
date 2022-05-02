@@ -481,7 +481,9 @@ protected:
     GuidUnorderedSet OutsideCreature[2];
     GuidUnorderedSet m_updateTenacityList;
 
-    int32 m_tenacityStack;
+    TeamId TenacityTeam;
+    int32 TenacityStack;
+    uint32 TenacityStackBounded;
 
     ObjectGuid m_titansRelic;
 };

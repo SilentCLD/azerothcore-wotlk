@@ -61,7 +61,10 @@ bool BattlefieldWG::SetupBattlefield()
     m_StartGroupingTimer = 15 * MINUTE * IN_MILLISECONDS;
     m_StartGrouping = false;
 
-    m_tenacityStack = 0;
+    TenacityTeam = TEAM_NEUTRAL;
+    TenacityStack = 0;
+    TenacityStackBounded = 0;
+
     m_titansRelic.Clear();
 
     KickPosition.Relocate(5728.117f, 2714.346f, 697.733f, 0);
@@ -314,8 +317,11 @@ void BattlefieldWG::OnBattleStart()
     // Send start warning to all players
     SendWarning(BATTLEFIELD_WG_TEXT_START);
 
-    // Xinef: reset tenacity counter
-    m_tenacityStack = 0;
+    // Reset tenacity counter
+    TenacityTeam = TEAM_NEUTRAL;
+    TenacityStack = 0;
+    TenacityStackBounded = 0;
+
     Events.ScheduleEvent(EVENT_UPDATE_TENACITY, 20 * IN_MILLISECONDS);
 
     if (sWorld->getBoolConfig(CONFIG_BATTLEGROUND_QUEUE_ANNOUNCER_ENABLE))
@@ -664,6 +670,17 @@ void BattlefieldWG::OnCreatureCreate(Creature* creature)
                             return;
                         }
                     }
+
+                    // Give newly created vehicle tenacity and honor buffs if applicable
+                    if (team == TenacityTeam)
+                    {
+                        creature->SetAuraStack(SPELL_TENACITY_VEHICLE, creature, TenacityStackBounded);
+                        if (uint32 const honorBuff = GetHonorBuff(TenacityStackBounded))
+                        {
+                            creature->CastSpell(creature, honorBuff, true);
+                        }
+                    }
+
                     break;
                 }
             case NPC_WINTERGRASP_SIEGE_ENGINE_TURRET_HORDE:
@@ -1194,11 +1211,11 @@ void BattlefieldWG::UpdateTenacity()
     }
 
     // Return if no change in stack and apply tenacity to new player
-    if (newStack == m_tenacityStack)
+    if (newStack == TenacityStack)
     {
         for (GuidUnorderedSet::const_iterator itr = m_updateTenacityList.begin(); itr != m_updateTenacityList.end(); ++itr)
             if (Player* newPlayer = ObjectAccessor::FindPlayer(*itr))
-                if ((newPlayer->GetTeamId() == TEAM_ALLIANCE && m_tenacityStack > 0) || (newPlayer->GetTeamId() == TEAM_HORDE && m_tenacityStack < 0))
+                if ((newPlayer->GetTeamId() == TEAM_ALLIANCE && TenacityStack > 0) || (newPlayer->GetTeamId() == TEAM_HORDE && TenacityStack < 0))
                 {
                     newStack = std::min(std::abs(newStack), 20);
                     uint32 buff_honor = GetHonorBuff(newStack);
@@ -1209,15 +1226,15 @@ void BattlefieldWG::UpdateTenacity()
         return;
     }
 
-    if (m_tenacityStack != 0)
+    if (TenacityStack != 0)
     {
-        if (m_tenacityStack > 0 && newStack <= 0)               // old buff was on alliance
+        if (TenacityStack > 0 && newStack <= 0)               // old buff was on alliance
             team = TEAM_ALLIANCE;
-        else if (m_tenacityStack < 0 && newStack >= 0)          // old buff was on horde
+        else if (TenacityStack < 0 && newStack >= 0)          // old buff was on horde
             team = TEAM_HORDE;
     }
 
-    m_tenacityStack = newStack;
+    TenacityStack = newStack;
     // Remove old buff
     if (team != TEAM_NEUTRAL)
     {
@@ -1234,7 +1251,9 @@ void BattlefieldWG::UpdateTenacity()
     if (newStack)
     {
         team = newStack > 0 ? TEAM_ALLIANCE : TEAM_HORDE;
+        TenacityTeam = team;
         newStack = std::min(std::abs(newStack), 20);
+        TenacityStackBounded = newStack;
         uint32 buff_honor = GetHonorBuff(newStack);
 
         for (GuidUnorderedSet::const_iterator itr = m_PlayersInWar[team].begin(); itr != m_PlayersInWar[team].end(); ++itr)
@@ -1252,6 +1271,11 @@ void BattlefieldWG::UpdateTenacity()
                 if (buff_honor)
                     creature->CastSpell(creature, buff_honor, true);
             }
+    }
+    else
+    {
+        TenacityTeam = TEAM_NEUTRAL;
+        TenacityStackBounded = 0;
     }
 }
 
