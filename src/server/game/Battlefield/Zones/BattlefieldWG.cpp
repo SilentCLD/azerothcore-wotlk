@@ -1124,12 +1124,16 @@ void BattlefieldWG::UpdatedDestroyedTowerCount(TeamId team, GameObject* go)
 void BattlefieldWG::ProcessEvent(WorldObject* obj, uint32 eventId)
 {
     if (!obj || !IsWarTime())
+    {
         return;
+    }
 
     // We handle only gameobjects here
     GameObject* go = obj->ToGameObject();
     if (!go)
+    {
         return;
+    }
 
     // On click on titan relic
     if (go->GetEntry() == GO_WINTERGRASP_TITAN_S_RELIC)
@@ -1144,18 +1148,22 @@ void BattlefieldWG::ProcessEvent(WorldObject* obj, uint32 eventId)
         }
     }
 
-    // if destroy or damage event, search the wall/tower and update worldstate/send warning message
-    for (GameObjectBuilding::const_iterator itr = BuildingsInZone.begin(); itr != BuildingsInZone.end(); ++itr)
+    // If destroy or damage event search the wall/tower and update worldstate/send warning message
+    for (auto& building : BuildingsInZone)
     {
-        if (GameObject* build = ObjectAccessor::GetGameObject(*obj, (*itr)->m_Build))
+        if (GameObject const* buildGo = ObjectAccessor::GetGameObject(*obj, building->m_Build))
         {
-            if (go->GetEntry() == build->GetEntry())
+            if (go->GetEntry() == buildGo->GetEntry())
             {
-                if (build->GetGOInfo()->building.damagedEvent == eventId)
-                    (*itr)->Damaged();
+                if (buildGo->GetGOInfo()->building.damagedEvent == eventId)
+                {
+                    building->Damaged();
+                }
 
-                if (build->GetGOInfo()->building.destroyedEvent == eventId)
-                    (*itr)->Destroyed();
+                if (buildGo->GetGOInfo()->building.destroyedEvent == eventId)
+                {
+                    building->Destroyed();
+                }
 
                 break;
             }
@@ -1176,11 +1184,20 @@ void BattlefieldWG::UpdateDamagedTowerCount(TeamId team)
 uint32 BattlefieldWG::GetHonorBuff(int32 stack) const
 {
     if (stack < 5)
+    {
         return 0;
+    }
+
     if (stack < 10)
+    {
         return SPELL_GREAT_HONOR;
+    }
+
     if (stack < 15)
+    {
         return SPELL_GREATER_HONOR;
+    }
+
     return SPELL_GREATEST_HONOR;
 }
 
@@ -1205,72 +1222,104 @@ void BattlefieldWG::UpdateTenacity()
     if (alliancePlayers && hordePlayers)
     {
         if (alliancePlayers < hordePlayers)
+        {
             newStack = int32((((float)hordePlayers / alliancePlayers) - 1.0f) * 4.0f);  // positive, should cast on alliance
+        }
         else if (alliancePlayers > hordePlayers)
+        {
             newStack = int32((1.0f - ((float)alliancePlayers / hordePlayers)) * 4.0f);  // negative, should cast on horde
+        }
     }
 
-    // Return if no change in stack and apply tenacity to new player
+    // Return if no change in stack - only apply tenacity to new players
     if (newStack == TenacityStack)
     {
-        for (GuidUnorderedSet::const_iterator itr = m_updateTenacityList.begin(); itr != m_updateTenacityList.end(); ++itr)
-            if (Player* newPlayer = ObjectAccessor::FindPlayer(*itr))
+        newStack = std::min(std::abs(newStack), 20);
+        for (auto& newPlayerGuid : m_updateTenacityList)
+        {
+            if (Player* newPlayer = ObjectAccessor::FindPlayer(newPlayerGuid))
+            {
                 if ((newPlayer->GetTeamId() == TEAM_ALLIANCE && TenacityStack > 0) || (newPlayer->GetTeamId() == TEAM_HORDE && TenacityStack < 0))
                 {
-                    newStack = std::min(std::abs(newStack), 20);
-                    uint32 buff_honor = GetHonorBuff(newStack);
+                    uint32 const honorBuff = GetHonorBuff(newStack);
                     newPlayer->SetAuraStack(SPELL_TENACITY, newPlayer, newStack);
-                    if (buff_honor)
-                        newPlayer->CastSpell(newPlayer, buff_honor, true);
+                    if (honorBuff)
+                    {
+                        newPlayer->CastSpell(newPlayer, honorBuff, true);
+                    }
                 }
+            }
+        }
         return;
     }
 
+    // Check if tenacity has switched factions
     if (TenacityStack != 0)
     {
-        if (TenacityStack > 0 && newStack <= 0)               // old buff was on alliance
+        if (TenacityStack > 0 && newStack <= 0) // old buff was on alliance
+        {
             team = TEAM_ALLIANCE;
-        else if (TenacityStack < 0 && newStack >= 0)          // old buff was on horde
+        }
+        else if (TenacityStack < 0 && newStack >= 0) // old buff was on horde
+        {
             team = TEAM_HORDE;
+        }
     }
 
     TenacityStack = newStack;
+
     // Remove old buff
     if (team != TEAM_NEUTRAL)
     {
-        for (GuidUnorderedSet::const_iterator itr = m_PlayersInWar[team].begin(); itr != m_PlayersInWar[team].end(); ++itr)
-            if (Player* player = ObjectAccessor::FindPlayer(*itr))
+        for (auto& playerGuid : m_PlayersInWar[team])
+        {
+            if (Player* player = ObjectAccessor::FindPlayer(playerGuid))
+            {
                 player->RemoveAurasDueToSpell(SPELL_TENACITY);
+            }
+        }
 
-        for (GuidUnorderedSet::const_iterator itr = m_vehicles[team].begin(); itr != m_vehicles[team].end(); ++itr)
-            if (Creature* creature = GetCreature(*itr))
+        for (auto& vehicleGuid : m_vehicles[team])
+        {
+            if (Creature* creature = GetCreature(vehicleGuid))
+            {
                 creature->RemoveAurasDueToSpell(SPELL_TENACITY_VEHICLE);
+            }
+        }
     }
 
     // Apply new buff
     if (newStack)
     {
         team = newStack > 0 ? TEAM_ALLIANCE : TEAM_HORDE;
-        TenacityTeam = team;
         newStack = std::min(std::abs(newStack), 20);
+        uint32 const honorBuff = GetHonorBuff(newStack);
+        TenacityTeam = team;
         TenacityStackBounded = newStack;
-        uint32 buff_honor = GetHonorBuff(newStack);
 
-        for (GuidUnorderedSet::const_iterator itr = m_PlayersInWar[team].begin(); itr != m_PlayersInWar[team].end(); ++itr)
-            if (Player* player = ObjectAccessor::FindPlayer(*itr))
+        for (auto& playerGuid : m_PlayersInWar[team])
+        {
+            if (Player* player = ObjectAccessor::FindPlayer(playerGuid))
             {
                 player->SetAuraStack(SPELL_TENACITY, player, newStack);
-                if (buff_honor)
-                    player->CastSpell(player, buff_honor, true);
+                if (honorBuff)
+                {
+                    player->CastSpell(player, honorBuff, true);
+                }
             }
+        }
 
-        for (GuidUnorderedSet::const_iterator itr = m_vehicles[team].begin(); itr != m_vehicles[team].end(); ++itr)
-            if (Creature* creature = GetCreature(*itr))
+        for (auto& vehicleGuid : m_vehicles[team])
+        {
+            if (Creature* creature = GetCreature(vehicleGuid))
             {
                 creature->SetAuraStack(SPELL_TENACITY_VEHICLE, creature, newStack);
-                if (buff_honor)
-                    creature->CastSpell(creature, buff_honor, true);
+                if (honorBuff)
+                {
+                    creature->CastSpell(creature, honorBuff, true);
+                }
             }
+        }
     }
     else
     {
