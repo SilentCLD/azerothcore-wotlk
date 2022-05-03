@@ -425,6 +425,8 @@ public:
     uint8 GetSpiritGraveyardId(uint32 areaId) const;
     uint32 GetAreaByGraveyardId(uint8 gId) const;
 
+    WGWorkshop* GetWorkshopById(uint32 id) const;
+
     uint32 GetData(uint32 data) const override;
 
     bool IsKeepNpc(uint32 entry)

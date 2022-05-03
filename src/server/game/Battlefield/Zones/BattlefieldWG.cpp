@@ -602,6 +602,20 @@ uint32 BattlefieldWG::GetAreaByGraveyardId(uint8 gId) const
     return 0;
 }
 
+WGWorkshop* BattlefieldWG::GetWorkshopById(uint32 id) const
+{
+    for (auto& workshop : WorkshopsList)
+    {
+        if (workshop && workshop->workshopId == id)
+        {
+            return workshop;
+        }
+    }
+
+    LOG_ERROR("bg.battlefield", "BattlefieldWG::GetWorkshopById Id: {} does not exist", id);
+    return nullptr;
+}
+
 void BattlefieldWG::OnCreatureCreate(Creature* creature)
 {
     // Accessing to db spawned creatures
@@ -752,20 +766,13 @@ void BattlefieldWG::OnGameObjectCreate(GameObject* go)
             return;
     }
 
-    for (Workshop::const_iterator itr = WorkshopsList.begin(); itr != WorkshopsList.end(); ++itr)
+    if (WGWorkshop* workshop = GetWorkshopById(workshopId))
     {
-        if (WGWorkshop* workshop = (*itr))
-        {
-            if (workshop->workshopId == workshopId)
-            {
-                WintergraspCapturePoint* capturePoint = new WintergraspCapturePoint(this, workshop->teamControl);
+        WintergraspCapturePoint* capturePoint = new WintergraspCapturePoint(this, workshop->teamControl);
 
-                capturePoint->SetCapturePointData(go);
-                capturePoint->LinkToWorkshop(workshop);
-                AddCapturePoint(capturePoint);
-                break;
-            }
-        }
+        capturePoint->SetCapturePointData(go);
+        capturePoint->LinkToWorkshop(workshop);
+        AddCapturePoint(capturePoint);
     }
 }
 
@@ -992,7 +999,9 @@ uint32 BattlefieldWG::GetData(uint32 data) const
     // xinef: little hack, same area for default horde graveyard
     // this graveyard is the one of broken temple!
     if (data == AREA_THE_CHILLED_QUAGMIRE)
+    {
         data = AREA_THE_BROKEN_TEMPLE;
+    }
 
     switch (data)
     {
@@ -1002,9 +1011,11 @@ uint32 BattlefieldWG::GetData(uint32 data) const
         case AREA_THE_BROKEN_TEMPLE:
         case AREA_WESTPARK_WORKSHOP:
         case AREA_EASTPARK_WORKSHOP:
-            // Graveyards and Workshops are controlled by the same team.
-            if (BfGraveyard const* graveyard = GetGraveyardById(GetSpiritGraveyardId(data)))
-                return graveyard->GetControlTeamId();
+            // Graveyards and Workshops share the same ID
+            if (WGWorkshop const* workshop = GetWorkshopById(GetSpiritGraveyardId(data)))
+            {
+                return workshop->teamControl;
+            }
     }
 
     return Battlefield::GetData(data);
