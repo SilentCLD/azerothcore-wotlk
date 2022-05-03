@@ -124,15 +124,6 @@ bool BattlefieldWG::SetupBattlefield()
         WorkshopsList.insert(workshop);
     }
 
-    // Reset all workshop graveyards to Defender
-    for (uint8 i = 0; i < BATTLEFIELD_WG_GY_KEEP; i++)
-    {
-        if (BfGraveyard* graveyard = GetGraveyardById(i))
-        {
-            graveyard->GiveControlTo(GetDefenderTeam());
-        }
-    }
-
     // Spawn NPCs in the defender's keep, both Horde and Alliance
     for (uint8 i = 0; i < WG_MAX_KEEP_NPC; i++)
     {
@@ -442,15 +433,6 @@ void BattlefieldWG::OnBattleEnd(bool endByTimer)
     for (auto& capturePoint : m_capturePoints)
     {
         dynamic_cast<WintergraspCapturePoint*>(capturePoint)->Reset();
-    }
-
-    // Update all graveyard, control is to defender when no wartime
-    for (uint8 i = 0; i < BATTLEFIELD_WG_GY_KEEP; i++)
-    {
-        if (BfGraveyard* graveyard = GetGraveyardById(i))
-        {
-            graveyard->GiveControlTo(GetDefenderTeam());
-        }
     }
 
     // Schedule the rebuild of buildings
