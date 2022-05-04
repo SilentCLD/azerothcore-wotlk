@@ -103,14 +103,20 @@ bool BattlefieldWG::SetupBattlefield()
     for (uint8 i = 0; i < BATTLEFIELD_WG_GRAVEYARD_MAX; i++)
     {
         BfGraveyardWG* graveyard = new BfGraveyardWG(this);
+        BfWGCoordGY const graveyardInfo = WGGraveYard[i];
 
         // When between games, the graveyard is controlled by the defending team
-        if (WGGraveYard[i].startcontrol == TEAM_NEUTRAL)
-            graveyard->Initialize(m_DefenderTeam, WGGraveYard[i].gyid);
+        if (graveyardInfo.StartControl == TEAM_NEUTRAL)
+        {
+            graveyard->Initialize(m_DefenderTeam, graveyardInfo.GraveyardId);
+        }
         else
-            graveyard->Initialize(WGGraveYard[i].startcontrol, WGGraveYard[i].gyid);
+        {
+            graveyard->Initialize(graveyardInfo.StartControl, graveyardInfo.GraveyardId);
+        }
 
-        graveyard->SetTextId(WGGraveYard[i].textid);
+        graveyard->SetTeleSpellId(graveyardInfo.TeleSpellId);
+        graveyard->SetTextId(graveyardInfo.TextId);
         m_GraveyardList[i] = graveyard;
     }
 
@@ -1358,5 +1364,6 @@ void WintergraspCapturePoint::ChangeTeam(TeamId /*oldTeam*/)
 BfGraveyardWG::BfGraveyardWG(BattlefieldWG* battlefield) : BfGraveyard(battlefield)
 {
     m_Bf = battlefield;
-    m_GossipTextId = 0;
+    GossipTextId = 0;
+    TeleSpellId = 0;
 }
