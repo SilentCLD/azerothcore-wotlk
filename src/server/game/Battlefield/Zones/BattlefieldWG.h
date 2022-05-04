@@ -1293,26 +1293,22 @@ struct BfWGGameObjectBuilding
         m_damagedText = damageText;
         m_destroyedText = destroyText;
 
-        UpdateTeam(false);
+        UpdateTeam(false, true);
 
-        m_State = sWorld->getWorldState(m_WorldState);
-        if (gobj)
+        switch (m_State)
         {
-            switch (m_State)
-            {
-                case BATTLEFIELD_WG_OBJECTSTATE_ALLIANCE_INTACT:
-                case BATTLEFIELD_WG_OBJECTSTATE_HORDE_INTACT:
-                    gobj->SetDestructibleState(GO_DESTRUCTIBLE_REBUILDING, nullptr, true);
-                    break;
-                case BATTLEFIELD_WG_OBJECTSTATE_ALLIANCE_DESTROY:
-                case BATTLEFIELD_WG_OBJECTSTATE_HORDE_DESTROY:
-                    gobj->SetDestructibleState(GO_DESTRUCTIBLE_DESTROYED);
-                    break;
-                case BATTLEFIELD_WG_OBJECTSTATE_ALLIANCE_DAMAGE:
-                case BATTLEFIELD_WG_OBJECTSTATE_HORDE_DAMAGE:
-                    gobj->SetDestructibleState(GO_DESTRUCTIBLE_DAMAGED);
-                    break;
-            }
+            case BATTLEFIELD_WG_OBJECTSTATE_ALLIANCE_INTACT:
+            case BATTLEFIELD_WG_OBJECTSTATE_HORDE_INTACT:
+                gobj->SetDestructibleState(GO_DESTRUCTIBLE_REBUILDING, nullptr, true);
+                break;
+            case BATTLEFIELD_WG_OBJECTSTATE_ALLIANCE_DESTROY:
+            case BATTLEFIELD_WG_OBJECTSTATE_HORDE_DESTROY:
+                gobj->SetDestructibleState(GO_DESTRUCTIBLE_DESTROYED);
+                break;
+            case BATTLEFIELD_WG_OBJECTSTATE_ALLIANCE_DAMAGE:
+            case BATTLEFIELD_WG_OBJECTSTATE_HORDE_DAMAGE:
+                gobj->SetDestructibleState(GO_DESTRUCTIBLE_DAMAGED);
+                break;
         }
 
         int32 towerid = -1;
@@ -1472,11 +1468,6 @@ struct BfWGGameObjectBuilding
             }
         }
     }
-
-    void Save()
-    {
-        sWorld->setWorldState(m_WorldState, m_State);
-    }
 };
 
 struct WGWorkshop
@@ -1559,11 +1550,6 @@ struct WGWorkshop
                 GiveControlTo(bf->GetAttackerTeam(), true);
                 break;
         }
-    }
-
-    void Save()
-    {
-        sWorld->setWorldState(WorkshopsData[workshopId].worldstate, state);
     }
 };
 

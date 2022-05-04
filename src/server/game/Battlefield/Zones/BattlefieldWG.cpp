@@ -419,20 +419,18 @@ void BattlefieldWG::OnBattleEnd(bool endByTimer)
     for (GameObjectSet::const_iterator itr = DefenderPortalList.begin(); itr != DefenderPortalList.end(); ++itr)
         (*itr)->SetUInt32Value(GAMEOBJECT_FACTION, WintergraspFaction[GetDefenderTeam()]);
 
-    // Saving data
+    // Update buildings
     for (auto& building : BuildingsInZone)
     {
         building->SetDestructible(false);
         building->UpdateTeam();
         building->UpdateTurretAttack(true);
-        building->Save();
     }
 
     // Update Workshops
     for (auto& workshop : WorkshopsList)
     {
         workshop->UpdateGraveyardAndWorkshop();
-        workshop->Save();
     }
 
     // Update CapturePoints
